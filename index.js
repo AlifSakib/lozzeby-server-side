@@ -25,11 +25,17 @@ async function dbConnect() {
     console.log(error.message.bgRed);
   }
 }
-
 dbConnect();
+
+const ProductCategories = client.db("LozzeBy").collection("ProductCategories");
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
+});
+
+app.get("/product-categories", async (req, res) => {
+  const categories = await ProductCategories.find({}).toArray();
+  res.send(categories);
 });
 
 app.listen(port, () => {
