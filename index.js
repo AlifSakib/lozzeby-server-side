@@ -29,6 +29,7 @@ dbConnect();
 
 const ProductCategories = client.db("LozzeBy").collection("ProductCategories");
 const ResaleProducts = client.db("LozzeBy").collection("ResaleProducts");
+const Sellers = client.db("LozzeBy").collection("SellerCollections");
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
@@ -50,6 +51,19 @@ app.post("/add-product", async (req, res) => {
   const product = req.body;
   const result = await ResaleProducts.insertOne(product);
   res.send(result);
+});
+
+app.post("/sellers", async (req, res) => {
+  const sellerInfo = req.body;
+  const result = await Sellers.insertOne(sellerInfo);
+  res.send(result);
+});
+
+app.get("/users/seller/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const user = await Sellers.findOne(query);
+  res.send({ isSeller: user?.role === "seller" });
 });
 
 app.listen(port, () => {
