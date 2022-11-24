@@ -30,6 +30,8 @@ dbConnect();
 const ProductCategories = client.db("LozzeBy").collection("ProductCategories");
 const ResaleProducts = client.db("LozzeBy").collection("ResaleProducts");
 const Sellers = client.db("LozzeBy").collection("SellerCollections");
+const Buyers = client.db("LozzeBy").collection("BuyersCollections");
+const BuyerOrders = client.db("LozzeBy").collection("BuyerOrders");
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
@@ -59,11 +61,44 @@ app.post("/sellers", async (req, res) => {
   res.send(result);
 });
 
+app.post("/buyers", async (req, res) => {
+  const buyerInfo = req.body;
+  const result = await Buyers.insertOne(buyerInfo);
+  res.send(result);
+});
+
 app.get("/users/seller/:email", async (req, res) => {
   const email = req.params.email;
   const query = { email: email };
   const user = await Sellers.findOne(query);
   res.send({ isSeller: user?.role === "seller" });
+});
+
+app.get("/users/buyer/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const user = await Buyers.findOne(query);
+  res.send({ isBuyer: user?.role === "buyer" });
+});
+
+app.get("/users/seller/products/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { seller_email: email };
+  const products = await ResaleProducts.find(query).toArray();
+  res.send(products);
+});
+
+app.post("/buyer-orders", async (req, res) => {
+  const orderInfo = req.body;
+  const result = await BuyerOrders.insertOne(orderInfo);
+  res.send(result);
+});
+
+app.get("/users/my-orders/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const orders = await BuyerOrders.find(query).toArray();
+  res.send(orders);
 });
 
 app.listen(port, () => {
