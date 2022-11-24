@@ -46,6 +46,12 @@ app.get("/category/:id", async (req, res) => {
   res.send(products);
 });
 
+app.post("/add-product", async (req, res) => {
+  const product = req.body;
+  const result = await ResaleProducts.insertOne(product);
+  res.send(result);
+});
+
 app.listen(port, () => {
   console.log(`Server is listening to port ${port} `.bgCyan);
 });
