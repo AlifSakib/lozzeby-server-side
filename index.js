@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.4mqdriq.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -28,6 +28,7 @@ async function dbConnect() {
 dbConnect();
 
 const ProductCategories = client.db("LozzeBy").collection("ProductCategories");
+const ResaleProducts = client.db("LozzeBy").collection("ResaleProducts");
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
@@ -36,6 +37,13 @@ app.get("/", (req, res) => {
 app.get("/product-categories", async (req, res) => {
   const categories = await ProductCategories.find({}).toArray();
   res.send(categories);
+});
+
+app.get("/category/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { category_id: id };
+  const products = await ResaleProducts.find(query).toArray();
+  res.send(products);
 });
 
 app.listen(port, () => {
