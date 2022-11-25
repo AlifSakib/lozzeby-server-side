@@ -179,6 +179,15 @@ app.get("/advertise-products", async (req, res) => {
   res.send(products);
 });
 
+app.delete("/users/buyers/delete/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const result = await Buyers.deleteOne(query);
+  res.send({
+    success: true,
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server is listening to port ${port} `.bgCyan);
 });
