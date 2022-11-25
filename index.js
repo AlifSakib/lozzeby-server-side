@@ -188,6 +188,15 @@ app.delete("/users/buyers/delete/:id", async (req, res) => {
   });
 });
 
+app.delete("/users/sellers/delete/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const result = await Sellers.deleteOne(query);
+  res.send({
+    success: true,
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server is listening to port ${port} `.bgCyan);
 });
