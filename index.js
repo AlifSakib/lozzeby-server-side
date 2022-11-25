@@ -32,6 +32,8 @@ const ResaleProducts = client.db("LozzeBy").collection("ResaleProducts");
 const Sellers = client.db("LozzeBy").collection("SellerCollections");
 const Buyers = client.db("LozzeBy").collection("BuyersCollections");
 const BuyerOrders = client.db("LozzeBy").collection("BuyerOrders");
+const Admin = client.db("LozzeBy").collection("Admin");
+const AdvertiseProducts = client.db("LozzeBy").collection("AdvertiseProducts");
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
@@ -81,6 +83,26 @@ app.get("/users/buyer/:email", async (req, res) => {
   res.send({ isBuyer: user?.role === "buyer" });
 });
 
+app.get("/users/admin/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const user = await Admin.findOne(query);
+  res.send({ isAdmin: user?.role === "admin" });
+});
+
+// app.get("/users/buyer/:email", async (req, res) => {
+//   const email = req.params.email;
+//   const query = { email: email };
+//   const user = await Buyers.findOne(query);
+
+//   if (user?.role === "buyer") {
+//     return res.send({ isBuyer: true });
+//   }
+//   if (user?.role === "admin") {
+//     return res.send({ isAdmin: true });
+//   }
+// });
+
 app.get("/users/seller/products/:email", async (req, res) => {
   const email = req.params.email;
   const query = { seller_email: email };
@@ -99,6 +121,62 @@ app.get("/users/my-orders/:email", async (req, res) => {
   const query = { email: email };
   const orders = await BuyerOrders.find(query).toArray();
   res.send(orders);
+});
+
+app.get("/all-sellers", async (req, res) => {
+  const allsellers = await Sellers.find({}).toArray();
+  res.send(allsellers);
+});
+
+app.get("/all-buyers", async (req, res) => {
+  const allsellers = await Buyers.find({}).toArray();
+  res.send(allsellers);
+});
+
+app.delete("/users/seller/my-product/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const result = await ResaleProducts.deleteOne(query);
+  res.send({
+    success: true,
+  });
+});
+
+app.put("/users/seller/my-product-available/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const options = { upsert: true };
+  const updatedDoc = {
+    $set: {
+      sell_status: "Available",
+    },
+  };
+  const result = await ResaleProducts.updateOne(filter, updatedDoc, options);
+  res.send({ success: true });
+});
+
+app.put("/users/seller/my-product-sold/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const options = { upsert: true };
+  const updatedDoc = {
+    $set: {
+      sell_status: "Sold",
+    },
+  };
+  const result = await ResaleProducts.updateOne(filter, updatedDoc, options);
+  res.send({ success: true });
+});
+
+app.post("/users/seller/my-product-advertise", async (req, res) => {
+  const product = req.body;
+  const result = await AdvertiseProducts.insertOne(product);
+  res.send({ success: true });
+});
+
+app.get("/advertise-products", async (req, res) => {
+  const products = await AdvertiseProducts.find({}).toArray();
+  res.send(products);
 });
 
 app.listen(port, () => {
