@@ -34,6 +34,7 @@ const Buyers = client.db("LozzeBy").collection("BuyersCollections");
 const BuyerOrders = client.db("LozzeBy").collection("BuyerOrders");
 const Admin = client.db("LozzeBy").collection("Admin");
 const AdvertiseProducts = client.db("LozzeBy").collection("AdvertiseProducts");
+const ReportedProducts = client.db("LozzeBy").collection("ReportedProducts");
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
@@ -195,6 +196,12 @@ app.delete("/users/sellers/delete/:id", async (req, res) => {
   res.send({
     success: true,
   });
+});
+
+app.post("/reported-products", async (req, res) => {
+  const product = req.body;
+  const result = await ReportedProducts.insertOne(product);
+  res.send({ success: true });
 });
 
 app.listen(port, () => {
