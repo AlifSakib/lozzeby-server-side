@@ -1,6 +1,9 @@
 require("dotenv").config();
 require("colors");
 
+const stripe = require("stripe")(
+  "sk_test_51M60o6JYKMdyVPnVuu9uHHkE81QhCeJfZPottMpPe8nouAWgxD32RjaR0OlkiGI0TF0DnBztleA5kgWdGjxF3xZn00DKbYhkzH"
+);
 const express = require("express");
 const cors = require("cors");
 const port = process.env.PORT || 5000;
@@ -35,6 +38,25 @@ const BuyerOrders = client.db("LozzeBy").collection("BuyerOrders");
 const Admin = client.db("LozzeBy").collection("Admin");
 const AdvertiseProducts = client.db("LozzeBy").collection("AdvertiseProducts");
 const ReportedProducts = client.db("LozzeBy").collection("ReportedProducts");
+const PaymentRecords = client.db("LozzeBy").collection("PayemntRecords");
+
+app.post("/create-payment-intent", async (req, res) => {
+  const order = req.body;
+  const price = order.product_price;
+  const amount = price * 100;
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    // amount: calculateOrderAmount(items),
+    currency: "usd",
+    amount: amount,
+    payment_method_types: ["card"],
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+});
 
 app.get("/", (req, res) => {
   res.send("Servier Running");
@@ -201,6 +223,37 @@ app.delete("/users/sellers/delete/:id", async (req, res) => {
 app.post("/reported-products", async (req, res) => {
   const product = req.body;
   const result = await ReportedProducts.insertOne(product);
+  res.send({ success: true });
+});
+
+app.get("/user/order/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const result = await BuyerOrders.findOne(query);
+  res.send(result);
+});
+
+app.post("/user/order/payment-details", async (req, res) => {
+  const paymentDetails = req.body;
+  const result = await PaymentRecords.insertOne(paymentDetails);
+  const id = paymentDetails.order_id;
+  const filter = { _id: ObjectId(id) };
+  const updatedDoc = {
+    $set: {
+      payment_status: true,
+      transactionId: paymentDetails.transactionId,
+    },
+  };
+  const updateOrder = await BuyerOrders.updateOne(filter, updatedDoc);
+  res.send({ success: true });
+});
+
+app.delete("/order/paid/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const deleteProduct = await ResaleProducts.deleteOne(query);
+  const deleteQuery = { _id: id };
+  const deleteAd = await AdvertiseProducts.deleteOne(deleteQuery);
   res.send({ success: true });
 });
 
