@@ -172,6 +172,7 @@ app.put("/users/seller/my-product-available/:id", async (req, res) => {
   const updatedDoc = {
     $set: {
       sell_status: "Available",
+      product_sold: false,
     },
   };
   const result = await ResaleProducts.updateOne(filter, updatedDoc, options);
@@ -185,6 +186,7 @@ app.put("/users/seller/my-product-sold/:id", async (req, res) => {
   const updatedDoc = {
     $set: {
       sell_status: "Sold",
+      product_sold: true,
     },
   };
   const result = await ResaleProducts.updateOne(filter, updatedDoc, options);
@@ -250,11 +252,62 @@ app.post("/user/order/payment-details", async (req, res) => {
 
 app.delete("/order/paid/:id", async (req, res) => {
   const id = req.params.id;
-  const query = { _id: ObjectId(id) };
-  const deleteProduct = await ResaleProducts.deleteOne(query);
   const deleteQuery = { _id: id };
   const deleteAd = await AdvertiseProducts.deleteOne(deleteQuery);
   res.send({ success: true });
+});
+
+app.put("/seller/verify/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const options = { upsert: true };
+  const updatedDoc = {
+    $set: {
+      verifyed: true,
+    },
+  };
+  const result = await Sellers.updateOne(filter, updatedDoc, options);
+  res.send({ success: true });
+});
+
+app.get("/seller/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const result = await Sellers.findOne(query);
+  res.send(result);
+});
+
+app.get("/reported-product", async (req, res) => {
+  const result = await ReportedProducts.find({}).toArray();
+  res.send(result);
+});
+
+app.delete("/reported-product/delete/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const result = await ResaleProducts.deleteOne(query);
+  const deletedReportedProduct = await ReportedProducts.deleteOne({ _id: id });
+  res.send({ success: true });
+});
+
+app.put("/resale-products/payment_status/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+
+  const updatedDoc = {
+    $set: {
+      product_sold: true,
+    },
+  };
+  const result = await ResaleProducts.updateOne(filter, updatedDoc);
+  res.send(result);
+});
+
+app.get("/buyer-order/product-detail/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: ObjectId(id) };
+  const result = await ResaleProducts.findOne(query);
+  res.send({ result });
 });
 
 app.listen(port, () => {
