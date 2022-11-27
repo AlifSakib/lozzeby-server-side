@@ -61,6 +61,21 @@ app.post("/create-payment-intent", async (req, res) => {
   });
 });
 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "Unauthorized Access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(403).send({ message: "Access Forbiden" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 app.get("/", (req, res) => {
   res.send("Servier Running");
 });
@@ -144,8 +159,12 @@ app.post("/buyer-orders", async (req, res) => {
   res.send(result);
 });
 
-app.get("/users/my-orders/:email", async (req, res) => {
+app.get("/users/my-orders/:email", verifyJWT, async (req, res) => {
   const email = req.params.email;
+  const decodedEmail = req.decoded.email;
+  if (email !== decodedEmail) {
+    return res.status(403).send({ message: "Access Forbiden" });
+  }
   const query = { email: email };
   const orders = await BuyerOrders.find(query).toArray();
   res.send(orders);
@@ -156,7 +175,7 @@ app.get("/all-sellers", async (req, res) => {
   res.send(allsellers);
 });
 
-app.get("/all-buyers", async (req, res) => {
+app.get("/all-buyers", verifyJWT, async (req, res) => {
   const allsellers = await Buyers.find({}).toArray();
   res.send(allsellers);
 });
@@ -206,7 +225,7 @@ app.post("/users/seller/my-product-advertise", async (req, res) => {
   res.send({ success: true });
 });
 
-app.get("/advertise-products", async (req, res) => {
+app.get("/advertise-products", verifyJWT, async (req, res) => {
   const products = await AdvertiseProducts.find({}).toArray();
   res.send(products);
 });
