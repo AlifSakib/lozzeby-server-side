@@ -313,6 +313,7 @@ app.delete("/reported-product/delete/:id", async (req, res) => {
   const query = { _id: ObjectId(id) };
   const result = await ResaleProducts.deleteOne(query);
   const deletedReportedProduct = await ReportedProducts.deleteOne({ _id: id });
+  const deleteAd = await AdvertiseProducts.deleteOne({ _id: id });
   res.send({ success: true });
 });
 
@@ -347,6 +348,15 @@ app.get("/jwt", async (req, res) => {
     return res.send({ accessToken: token });
   }
   res.status(403).send({ message: "Access Denied" });
+});
+
+app.get("/check-seller-status/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const user = await Sellers.findOne(query);
+  if (user.verifyed) {
+    res.send(true);
+  }
 });
 
 app.listen(port, () => {
