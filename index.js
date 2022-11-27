@@ -4,6 +4,8 @@ require("colors");
 const stripe = require("stripe")(
   "sk_test_51M60o6JYKMdyVPnVuu9uHHkE81QhCeJfZPottMpPe8nouAWgxD32RjaR0OlkiGI0TF0DnBztleA5kgWdGjxF3xZn00DKbYhkzH"
 );
+
+const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
 const port = process.env.PORT || 5000;
@@ -39,6 +41,7 @@ const Admin = client.db("LozzeBy").collection("Admin");
 const AdvertiseProducts = client.db("LozzeBy").collection("AdvertiseProducts");
 const ReportedProducts = client.db("LozzeBy").collection("ReportedProducts");
 const PaymentRecords = client.db("LozzeBy").collection("PayemntRecords");
+const AllUsers = client.db("LozzeBy").collection("AllUsers");
 
 app.post("/create-payment-intent", async (req, res) => {
   const order = req.body;
@@ -83,12 +86,14 @@ app.post("/add-product", async (req, res) => {
 app.post("/sellers", async (req, res) => {
   const sellerInfo = req.body;
   const result = await Sellers.insertOne(sellerInfo);
+  const alluser = await AllUsers.insertOne(sellerInfo);
   res.send(result);
 });
 
 app.post("/buyers", async (req, res) => {
   const buyerInfo = req.body;
   const result = await Buyers.insertOne(buyerInfo);
+  const alluser = await AllUsers.insertOne(buyerInfo);
   res.send(result);
 });
 
@@ -310,6 +315,19 @@ app.get("/buyer-order/product-detail/:id", async (req, res) => {
   const query = { _id: ObjectId(id) };
   const result = await ResaleProducts.findOne(query);
   res.send({ result });
+});
+
+app.get("/jwt", async (req, res) => {
+  const email = req.query.email;
+  const query = { email: email };
+  const user = await AllUsers.findOne(query);
+  if (user) {
+    const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+      expiresIn: "1d",
+    });
+    return res.send({ accessToken: token });
+  }
+  res.status(403).send({ message: "Access Denied" });
 });
 
 app.listen(port, () => {
