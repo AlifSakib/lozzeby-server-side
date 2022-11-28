@@ -219,13 +219,13 @@ app.put("/users/seller/my-product-sold/:id", async (req, res) => {
   res.send({ success: true });
 });
 
-app.post("/users/seller/my-product-advertise", async (req, res) => {
+app.post("/users/seller/my-product-advertise", verifyJWT, async (req, res) => {
   const product = req.body;
   const result = await AdvertiseProducts.insertOne(product);
   res.send({ success: true });
 });
 
-app.get("/advertise-products", verifyJWT, async (req, res) => {
+app.get("/advertise-products", async (req, res) => {
   const products = await AdvertiseProducts.find({}).toArray();
   res.send(products);
 });
@@ -354,9 +354,29 @@ app.get("/check-seller-status/:email", async (req, res) => {
   const email = req.params.email;
   const query = { email: email };
   const user = await Sellers.findOne(query);
-  if (user.verifyed) {
+  if (user?.verifyed) {
     res.send(true);
   }
+});
+
+app.put("/buyers/:email", async (req, res) => {
+  const email = req.params.email;
+  const user = req.body;
+  const filter = { email: email };
+  const options = { upsert: true };
+  const updatedDoc = {
+    $set: user,
+  };
+  const result = await AllUsers.updateOne(filter, updatedDoc, options);
+  const result2 = await Buyers.updateOne(filter, updatedDoc, options);
+  res.send({ success: true });
+});
+
+app.get("/check-user-email/:email", async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const result = await AllUsers.findOne(query);
+  res.send({ success: true });
 });
 
 app.listen(port, () => {
